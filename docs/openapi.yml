@@ -192,7 +192,6 @@ paths:
         - in: query
           name: gender
           description: filter characters by gender which could be male, female, or unknown
-          required: true
           schema:
             type: string
       responses:
