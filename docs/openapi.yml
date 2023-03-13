@@ -1,0 +1,392 @@
+openapi: 3.0.1
+info:
+  title: Go-Movie
+  description: This is go-movie, a movie service using https://swapi.dev .
+  contact:
+    name: Go-Movie Support
+    email: example@email.com
+  version: 1.0.0
+servers:
+  - url: http://localhost:8081/api/v1
+paths:
+  # paths here
+  /movies:
+    get:
+      tags:
+        - movies
+      summary: Get All Movies
+      description: This api endpoint gets all movies from https://swapi.dev .
+      operationId:  getAllMovies
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Movie"
+                  message:
+                    type: string
+                    example: "movie list retrieved successfully"
+                  status:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "Friday, 10-Mar-23 01:09:22 UTC"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponseJSON"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerErrorResponseJSON"
+      x-codegen-request-body-name: GetAllMovies
+
+  /movie/{movie_id}/comments:
+    post:
+      tags:
+        - comments
+      summary: Add Comment For A Movie
+      description: This api endpoint adds comment to a movie from https://swapi.dev .
+      operationId: addComment
+      parameters:
+        - name: movie_id
+          in: path
+          description: id of the movie related to comment
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Content of comment
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: "Nice Movie"
+                  minLength: 1
+                  maxLength: 500
+        required: true
+      responses:
+        "201":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Comment"
+                  message:
+                    type: string
+                    example: "comment added successfully"
+                  status:
+                    type: integer
+                    example: 201
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "Friday, 10-Mar-23 01:09:22 UTC"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequestResponseJSON"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponseJSON"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerErrorResponseJSON"
+        x-codegen-request-body-name: AddComment
+    get:
+      tags:
+        - comments
+      summary: Get All Comments For A Movie
+      description: This api endpoint gets all comments relating a movie from https://swapi.dev .
+      operationId: getAllComments
+      parameters:
+        - name: movie_id
+          in: path
+          description: id of the movie related to comment
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Comments"
+                  message:
+                    type: string
+                    example: "comments retrieved successfully"
+                  status:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "Friday, 10-Mar-23 01:09:22 UTC"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequestResponseJSON"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponseJSON"
+        "500":
+            description: Server Error
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/ServerErrorResponseJSON"
+        x-codegen-request-body-name: GetAllComments
+
+  /movie/{movie_id}/characters:
+    get:
+      tags:
+        - characters
+      summary: Get All Characters For A Movie
+      description: This api endpoint gets all characters relating a movie from https://swapi.dev .
+      operationId: getAllCharacters
+      parameters:
+        - name: movie_id
+          in: path
+          description: id of the movie related to comment
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: sort_by
+          description: sort characters by gender, height, or name in ascending or descending order in which values can be "gender.asc", "gender.desc", "name.asc", "name.desc","height.asc","height.desc"
+          schema:
+            type: string
+        - in: query
+          name: gender
+          description: filter characters by gender which could be male, female, or unknown
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/CharacterListResponse"
+                  message:
+                    type: string
+                    example: "characters retrieved successfully"
+                  status:
+                    type: integer
+                    example: 200
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "Friday, 10-Mar-23 01:09:22 UTC"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequestResponseJSON"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundResponseJSON"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerErrorResponseJSON"
+        x-codegen-request-body-name: GetAllCharactersForAMovie
+
+components:
+  # reference component schemas here
+  schemas:
+    NotFoundResponseJSON:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        errors:
+          type: string
+          example: "bad request"
+        timestamp:
+          type: string
+          format: date-time
+          example: "Friday, 10-Mar-23 01:09:22 UTC"
+    BadRequestResponseJSON:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 400
+        errors:
+          type: string
+          example: "bad request"
+        timestamp:
+          type: string
+          format: date-time
+          example: "Friday, 10-Mar-23 01:09:22 UTC"
+    ServerErrorResponseJSON:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 500
+        errors:
+          type: string
+          example: "error"
+        timestamp:
+          type: string
+          format: date-time
+          example: "Friday, 10-Mar-23 01:09:22 UTC"
+
+    Movie:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "A new movie"
+        opening_crawl:
+          type: string
+          example: "A new movie about..."
+        release_date:
+          type: string
+          format: date-time
+          example: "1977-05-25"
+        comments_count:
+          type: integer
+          example: 1
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        movie_title:
+          type: string
+          example: "A new movie"
+        movie_id:
+          type: integer
+          example: 1
+        author:
+          type: string
+          example: "127.0.0.1:89000"
+        content:
+          type: string
+          example: "Content"
+        created_at:
+          type: string
+          format: date-time
+    Comments:
+      type: array
+      items:
+        $ref: "#/components/schemas/Comment"
+
+    CharacterListResponse:
+      type: object
+      properties:
+        characters:
+          type: array
+          items:
+            $ref: "#/components/schemas/MovieCharacter"
+        characters_count:
+          type: integer
+          example: 1
+        total_height_of_characters_in_cm:
+          type: string
+          example: "170 cm"
+        total_height_of_characters_in_feet:
+          type: string
+          example: "5ft and 6.93 inches"
+
+    MovieCharacter:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Name"
+        mass:
+          type: string
+          example: "90"
+        height:
+          type: string
+          example: "170"
+        hair_color:
+          type: string
+          example: "Brown"
+        skin_color:
+          type: string
+          example: "Light"
+        eye_color:
+          type: string
+          example: "Blue"
+        birth_year:
+          type: string
+          example: "1908"
+        gender:
+          type: string
+          example: "Male"
+        homeworld:
+          type: string
+          example: "Home World"
+        films:
+          type: array
+          items:
+            type: string
+        vehicles:
+          type: array
+          items:
+            type: string
+        starships:
+          type: array
+          items:
+            type: string
+        created:
+          type: string
+          format: date-time
+          example: "2014-12-15T12:53:49.297000Z"
+        edited:
+          type: string
+          format: date-time
+          example: "2014-12-15T12:53:49.297000Z"
+        url:
+          type: string
+          example: "https://swapi.dev/api/people/24/"
