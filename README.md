@@ -3,4 +3,4 @@
 
 ## go-movie-api Documentation
 
-See the doc at https://young-fireant-51.redoc.ly/
+See the doc at https://gomovie.readme.io
