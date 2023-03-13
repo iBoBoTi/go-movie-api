@@ -98,7 +98,8 @@ func (m *commentHandler) AddCommentToMovie(c *gin.Context) {
 	}
 
 	if cachedMovie != nil {
-		swapiMovie, _ = cachedMovie.(domain.SwapiMovie)
+		movie, _ := cachedMovie.(*domain.SwapiMovie)
+		swapiMovie = *movie
 	}
 
 	var comment domain.Comment

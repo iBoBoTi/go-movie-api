@@ -60,7 +60,8 @@ func (m *characterHandler) GetCharactersByMovie(c *gin.Context) {
 	}
 
 	if cachedMovie != nil {
-		swapiMovie, _ = cachedMovie.(domain.SwapiMovie)
+		movie, _ := cachedMovie.(*domain.SwapiMovie)
+		swapiMovie = *movie
 	}
 
 	//get characters from movie from
@@ -80,7 +81,8 @@ func (m *characterHandler) GetCharactersByMovie(c *gin.Context) {
 		}
 
 		if cachedMovieCharacter != nil {
-			movieCharacter, _ = cachedMovieCharacter.(domain.MovieCharacter)
+			character, _ := cachedMovieCharacter.(*domain.MovieCharacter)
+			movieCharacter = *character
 		}
 
 		swapiMovieCharacters = append(swapiMovieCharacters, movieCharacter)

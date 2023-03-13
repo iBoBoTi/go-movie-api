@@ -53,7 +53,8 @@ func (m *movieHandler) GetMovieList(c *gin.Context) {
 	}
 
 	if cachedMovies != nil {
-		swapiMoviesResponse, _ = cachedMovies.(domain.SwapiMovieListResponse)
+		movies, _ := cachedMovies.(*domain.SwapiMovieListResponse)
+		swapiMoviesResponse = *movies
 	}
 
 	sort.Slice(swapiMoviesResponse.Results, func(i, j int) bool {
