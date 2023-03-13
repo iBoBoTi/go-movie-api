@@ -3,4 +3,4 @@
 
 ## go-movie-api Documentation
 
-See the doc at https://dash.readme.com/hub-go/gomovie?redirect=/v1.0
+See the doc at https://young-fireant-51.redoc.ly/
