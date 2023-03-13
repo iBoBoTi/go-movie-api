@@ -12,7 +12,6 @@ RUN go mod download
 
 
 #RUN go build -o /go-movie-api
-
 RUN go build -tags netgo -ldflags '-s -w' -o app
 
 EXPOSE $PORT
