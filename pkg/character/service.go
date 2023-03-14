@@ -1,11 +1,11 @@
-package api
+package character
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/iBoBoTi/go-movie-api/cache"
-	"github.com/iBoBoTi/go-movie-api/internal/api/response"
-	"github.com/iBoBoTi/go-movie-api/internal/domain"
+	"github.com/iBoBoTi/go-movie-api/errors"
+	"github.com/iBoBoTi/go-movie-api/internal/cache"
+	"github.com/iBoBoTi/go-movie-api/pkg/character/types"
+	"github.com/iBoBoTi/go-movie-api/pkg/models"
 	"github.com/iBoBoTi/go-movie-api/swapi"
 	"github.com/redis/go-redis/v9"
 	"log"
@@ -16,72 +16,61 @@ import (
 	"strings"
 )
 
-type CharacterHandler interface {
-	GetCharactersByMovie(c *gin.Context)
+type Service interface {
+	List(movieID int, sortBy, filterByGender string) (*types.CharacterListResponse, *errors.Error)
 }
 
-type characterHandler struct {
-	Cache       cache.GoMovieCache
-	SwapiClient *swapi.SwapiClient
+type service struct {
+	Cache cache.GoMovieCache
 }
 
-func NewCharacterHandler(cache cache.GoMovieCache, swapiClient *swapi.SwapiClient) CharacterHandler {
-	return &characterHandler{
-		Cache:       cache,
-		SwapiClient: swapiClient,
+func NewService(cache cache.GoMovieCache) Service {
+	return &service{
+		Cache: cache,
 	}
 }
 
-func (m *characterHandler) GetCharactersByMovie(c *gin.Context) {
-	movieID, err := strconv.Atoi(c.Param("movie_id"))
-	if err != nil {
-		response.JSON(c, http.StatusBadRequest, "", nil, fmt.Errorf("invalid id value"))
-		return
-	}
+func (s *service) List(movieID int, sortBy, filterByGender string) (*types.CharacterListResponse, *errors.Error) {
 
-	var swapiMovie domain.SwapiMovie
+	var swapiMovie models.SwapiMovie
 
-	cachedMovie, err := m.Cache.Get(fmt.Sprintf("movie-%v", movieID), &swapiMovie)
+	cachedMovie, err := s.Cache.Get(fmt.Sprintf("movie-%v", movieID), &swapiMovie)
 	if err == redis.Nil && cachedMovie == nil {
-		responseStatusCode, err := m.SwapiClient.Get(fmt.Sprintf("films/%v/", movieID), &swapiMovie)
+		err := swapi.DefaultClient.Get(fmt.Sprintf("films/%v/", movieID), &swapiMovie)
 		if err != nil {
 			log.Printf("error making swapi client call %#v", err)
 
-			var errorStr string
-			SetErrorString(responseStatusCode, &errorStr)
-
-			response.JSON(c, responseStatusCode, "", nil, fmt.Errorf(errorStr))
-			return
+			return nil, errors.New("internal server error", http.StatusInternalServerError)
 		}
 
-		if err := m.Cache.Set(fmt.Sprintf("movie-%v", movieID), &swapiMovie); err != nil {
+		if err := s.Cache.Set(fmt.Sprintf("movie-%v", movieID), &swapiMovie); err != nil {
 			log.Printf("error setting movie-%v in cache: %v", movieID, err)
 		}
 	}
 
 	if cachedMovie != nil {
-		movie, _ := cachedMovie.(*domain.SwapiMovie)
+		movie, _ := cachedMovie.(*models.SwapiMovie)
 		swapiMovie = *movie
 	}
 
 	//get characters from movie from
-	var swapiMovieCharacters []domain.MovieCharacter
+	var swapiMovieCharacters []types.Character
 	for _, v := range swapiMovie.CharacterURLs {
-		var movieCharacter domain.MovieCharacter
+		var movieCharacter types.Character
 
 		url := strings.Replace(v, "https://swapi.dev/api/", "", 1)
 
-		cachedMovieCharacter, err := m.Cache.Get(fmt.Sprintf("character-%v", url), &movieCharacter)
+		cachedMovieCharacter, err := s.Cache.Get(fmt.Sprintf("Character-%v", url), &movieCharacter)
 		if err == redis.Nil && cachedMovieCharacter == nil {
-			_, _ = m.SwapiClient.Get(url, &movieCharacter)
+			_ = swapi.DefaultClient.Get(url, &movieCharacter)
 
-			if err := m.Cache.Set(fmt.Sprintf("character-%v", url), &movieCharacter); err != nil {
-				log.Printf("error setting character-%v in cache: %v", url, err)
+			if err := s.Cache.Set(fmt.Sprintf("Character-%v", url), &movieCharacter); err != nil {
+				log.Printf("error setting Character-%v in cache: %v", url, err)
 			}
 		}
 
 		if cachedMovieCharacter != nil {
-			character, _ := cachedMovieCharacter.(*domain.MovieCharacter)
+			character, _ := cachedMovieCharacter.(*types.Character)
 			movieCharacter = *character
 		}
 
@@ -89,8 +78,7 @@ func (m *characterHandler) GetCharactersByMovie(c *gin.Context) {
 	}
 
 	// Sortby and filterby
-	sortBy := c.Query("sort_by")
-	filterByGender := c.Query("gender")
+
 	if sortBy != "" {
 		SortCharacterList(sortBy, swapiMovieCharacters)
 	}
@@ -103,17 +91,16 @@ func (m *characterHandler) GetCharactersByMovie(c *gin.Context) {
 	//get total number of height in CM/ Feet
 	heightsInFeet, heightsInCM := GetTotalHeightOfCharacter(swapiMovieCharacters)
 
-	characterResponse := domain.CharacterListResponse{
+	characterResponse := &types.CharacterListResponse{
 		Characters:                    swapiMovieCharacters,
 		CharactersCount:               len(swapiMovieCharacters),
 		TotalHeightOfCharactersInFeet: heightsInFeet,
 		TotalHeightOfCharactersInCM:   heightsInCM,
 	}
-
-	response.JSON(c, http.StatusOK, "movie characters retrieved successfully", characterResponse, nil)
+	return characterResponse, nil
 }
 
-func SortCharacterList(sortBy string, characters []domain.MovieCharacter) {
+func SortCharacterList(sortBy string, characters []types.Character) {
 	switch sortBy {
 	case "name.asc":
 		sort.Slice(characters, func(i, j int) bool {
@@ -147,8 +134,8 @@ func SortCharacterList(sortBy string, characters []domain.MovieCharacter) {
 	}
 }
 
-func FilterCharacterList(filterByGender string, characters []domain.MovieCharacter) []domain.MovieCharacter {
-	filteredCharacters := make([]domain.MovieCharacter, 0)
+func FilterCharacterList(filterByGender string, characters []types.Character) []types.Character {
+	filteredCharacters := make([]types.Character, 0)
 	for _, v := range characters {
 		if strings.ToLower(filterByGender) == strings.ToLower(v.Gender) {
 			filteredCharacters = append(filteredCharacters, v)
@@ -157,7 +144,7 @@ func FilterCharacterList(filterByGender string, characters []domain.MovieCharact
 	return filteredCharacters
 }
 
-func GetTotalHeightOfCharacter(characters []domain.MovieCharacter) (string, string) {
+func GetTotalHeightOfCharacter(characters []types.Character) (string, string) {
 	var totalHeight float64
 	for _, v := range characters {
 		height, _ := strconv.ParseFloat(v.Height, 64)

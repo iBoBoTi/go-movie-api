@@ -1,6 +1,6 @@
-package domain
+package types
 
-type MovieCharacter struct {
+type Character struct {
 	Name      string   `json:"name"`
 	Mass      string   `json:"mass"`
 	Height    string   `json:"height"`
@@ -19,8 +19,8 @@ type MovieCharacter struct {
 }
 
 type CharacterListResponse struct {
-	Characters                    []MovieCharacter `json:"characters"`
-	CharactersCount               int              `json:"characters_count"`
-	TotalHeightOfCharactersInCM   string           `json:"total_height_of_characters_in_cm"`
-	TotalHeightOfCharactersInFeet string           `json:"total_height_of_characters_in_feet"`
+	Characters                    []Character `json:"characters"`
+	CharactersCount               int         `json:"characters_count"`
+	TotalHeightOfCharactersInCM   string      `json:"total_height_of_characters_in_cm"`
+	TotalHeightOfCharactersInFeet string      `json:"total_height_of_characters_in_feet"`
 }

@@ -13,6 +13,9 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
-mocks
+pkg/comment/mocks
+pkg/character/mocks
+pkg/movie/mocks
+swapi/mocks
 .env
 .idea

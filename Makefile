@@ -20,5 +20,8 @@ migrate-clean:
 	migrate -path database/migration/ -database $(DATABASE_URL) force  1
 
 generate-mock:
-	mockgen -destination=mocks/comment_service_mock.go -package=mocks github.com/iBoBoTi/go-movie-api/internal/usecase CommentService
-	mockgen -destination=mocks/cache_mock.go -package=mocks github.com/iBoBoTi/go-movie-api/cache GoMovieCache
+	mockgen -destination=./pkg/comment/mocks/service_mock.go -package=comment_mocks github.com/iBoBoTi/go-movie-api/pkg/comment Service
+	mockgen -destination=./pkg/comment/mocks/repository_mock.go -package=comment_mocks github.com/iBoBoTi/go-movie-api/pkg/comment Repository
+	mockgen -destination=./pkg/movie/mocks/service_mock.go -package=movie_mocks github.com/iBoBoTi/go-movie-api/pkg/movie Service
+	mockgen -destination=./pkg/character/mocks/service_mock.go -package=character_mocks github.com/iBoBoTi/go-movie-api/pkg/character Service
+	mockgen -destination=./internal/cache/mocks/cache_mock.go -package=cache_mocks github.com/iBoBoTi/go-movie-api/internal/cache GoMovieCache

@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/iBoBoTi/go-movie-api/config"
+	"github.com/iBoBoTi/go-movie-api/internal/config"
 	"log"
 	"net/http"
 	"os"

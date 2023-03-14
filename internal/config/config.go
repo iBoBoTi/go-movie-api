@@ -21,10 +21,10 @@ type Config struct {
 	RedisPassword    string `envconfig:"redis_password"`
 }
 
-func Load() (*Config, error) {
+func Load(filename string) (*Config, error) {
 	env := os.Getenv("GIN_MODE")
 	if env != "release" {
-		if err := godotenv.Load("./.env"); err != nil {
+		if err := godotenv.Load(filename); err != nil {
 			log.Printf("couldn't load env vars: %v", err)
 		}
 	}

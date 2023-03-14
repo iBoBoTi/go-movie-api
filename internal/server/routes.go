@@ -2,11 +2,13 @@ package server
 
 import (
 	"fmt"
-	cache2 "github.com/iBoBoTi/go-movie-api/cache"
-	"github.com/iBoBoTi/go-movie-api/internal/api"
-	repo "github.com/iBoBoTi/go-movie-api/internal/respository"
-	"github.com/iBoBoTi/go-movie-api/internal/usecase"
+	"github.com/iBoBoTi/go-movie-api/internal/cache"
+	repo "github.com/iBoBoTi/go-movie-api/internal/database"
+	"github.com/iBoBoTi/go-movie-api/pkg/character"
+	"github.com/iBoBoTi/go-movie-api/pkg/comment"
+	"github.com/iBoBoTi/go-movie-api/pkg/movie"
 	"github.com/iBoBoTi/go-movie-api/swapi"
+
 	"log"
 	"os"
 	"time"
@@ -22,24 +24,25 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	if err != nil {
 		log.Fatalf("error connecting to database: %v", err)
 	}
-	swapiClient := swapi.NewSwapiClient()
+	swapi.InitClient()
+	goMovieCache := cache.NewGoMovieCache(cache.NewRedisClient(s.Config))
 
-	goMovieCache := cache2.NewGoMovieCache(cache2.NewRedisClient(s.Config))
-
-	commentRepository := repo.NewCommentRespository(db)
-	commentService := usecase.NewCommentService(commentRepository)
+	commentRepository := comment.NewRespository(db)
+	commentService := comment.NewService(goMovieCache, commentRepository)
+	movieService := movie.NewService(commentService, goMovieCache)
 
 	// movie
-	movieHandler := api.NewMovieHandler(commentService, goMovieCache, swapiClient)
+	movieHandler := movie.NewHandler(movieService)
 	apirouter.GET("/movies", movieHandler.GetMovieList)
 
 	// comment
-	commentHandler := api.NewCommentHandler(commentService, goMovieCache, swapiClient)
-	apirouter.POST("/movie/:movie_id/comments", commentHandler.AddCommentToMovie)
-	apirouter.GET("/movie/:movie_id/comments", commentHandler.GetCommentsByMovie)
+	commentHandler := comment.NewHandler(commentService)
+	apirouter.POST("/movie/:movie_id/comments", commentHandler.AddComment)
+	apirouter.GET("/movie/:movie_id/comments", commentHandler.GetComments)
 
 	// character
-	characterHandler := api.NewCharacterHandler(goMovieCache, swapiClient)
+	characterService := character.NewService(goMovieCache)
+	characterHandler := character.NewHandler(characterService)
 	apirouter.GET("/movie/:movie_id/characters", characterHandler.GetCharactersByMovie)
 }
 

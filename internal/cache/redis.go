@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
-	"github.com/iBoBoTi/go-movie-api/config"
+	"github.com/iBoBoTi/go-movie-api/internal/config"
 	"github.com/redis/go-redis/v9"
 	"log"
 )
