@@ -1,5 +1,7 @@
 # go-movie-api
 
+A movie api that retrieves data from `https://swapi.dev`
+
 ## Local Development
 
 1. Install Docker on your system
