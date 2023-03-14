@@ -1,5 +1,14 @@
 # go-movie-api
 
+## Local Development
+
+1. Install Docker on your system
+2. Using the format on .env.example create a .env file to load environment variables
+3. Read the Makefile for command to run api locally - use `make up` to build and run application locally
+
+## go-movie-api Live API
+
+See link https://gomovie-api.onrender.com but do well to check documentation for guidiance on how to use api endpoints
 
 ## go-movie-api Documentation
 
