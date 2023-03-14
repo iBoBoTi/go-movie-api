@@ -7,7 +7,7 @@ info:
     email: example@email.com
   version: 1.0.0
 servers:
-  - url: http://localhost:8081/api/v1
+  - url: https://gomovie-api.onrender.com
 paths:
   # paths here
   /movies:
@@ -325,7 +325,7 @@ components:
         characters:
           type: array
           items:
-            $ref: "#/components/schemas/MovieCharacter"
+            $ref: "#/components/schemas/Character"
         characters_count:
           type: integer
           example: 1
@@ -336,7 +336,7 @@ components:
           type: string
           example: "5ft and 6.93 inches"
 
-    MovieCharacter:
+    Character:
       type: object
       properties:
         name:
