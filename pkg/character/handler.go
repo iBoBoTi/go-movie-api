@@ -32,7 +32,7 @@ func (h *handler) GetCharactersByMovie(c *gin.Context) {
 	}
 
 	characterResponse, er := h.CharacterService.List(movieID, sortBy, filterByGender)
-	if err != nil {
+	if er != nil {
 		render.JSON(c, er.Status, "", nil, er)
 		return
 	}

@@ -7,7 +7,7 @@ info:
     email: example@email.com
   version: 1.0.0
 servers:
-  - url: https://gomovie-api.onrender.com
+  - url: https://gomovie-api.onrender.com/api/v1
 paths:
   # paths here
   /movies:

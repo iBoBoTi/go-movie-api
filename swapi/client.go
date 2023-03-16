@@ -3,7 +3,6 @@ package swapi
 import (
 	"encoding/json"
 	"fmt"
-	swapiErr "github.com/iBoBoTi/go-movie-api/errors"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -33,26 +32,40 @@ func InitClient() {
 	DefaultClient = newClient()
 }
 
-func (s *Client) Get(url string, response interface{}) error {
+func (s *Client) Get(url string, response interface{}) *Error {
 	url = fmt.Sprintf("%v%v", s.baseURL, url)
 	res, err := s.HTTPClient.Get(url)
 	if err != nil {
-
-		return fmt.Errorf("error sending request %+v", err)
+		return &Error{
+			Message:     "internal server error",
+			StatusCode:  http.StatusInternalServerError,
+			ActualError: fmt.Errorf("error sending request %+v", err),
+		}
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode >= 400 {
 		b, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			return err
+			return &Error{
+				Message:     "",
+				StatusCode:  res.StatusCode,
+				ActualError: fmt.Errorf("error sending request %+v", err),
+			}
 		}
-		return &swapiErr.Error{
-			Message: string(b),
-			Status:  res.StatusCode,
+		return &Error{
+			Message:    string(b),
+			StatusCode: res.StatusCode,
 		}
 	}
 
-	return json.NewDecoder(res.Body).Decode(response)
+	if err := json.NewDecoder(res.Body).Decode(response); err != nil {
+		return &Error{
+			Message:     "internal server error",
+			StatusCode:  http.StatusInternalServerError,
+			ActualError: fmt.Errorf("error decoding response %+v", err),
+		}
+	}
 
+	return nil
 }

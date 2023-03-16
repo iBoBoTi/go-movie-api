@@ -34,12 +34,11 @@ func (m movieService) List() ([]types.Movie, *errors.Error) {
 
 	cachedMovies, err := m.Cache.Get("movies", &swapiMoviesResponse)
 	if err == redis.Nil && cachedMovies == nil {
-		err := swapi.DefaultClient.Get("films/", &swapiMoviesResponse)
-		if err != nil {
-			log.Printf("error making swapi call %#v", err)
-
-			return nil, errors.New(err.Error(), http.StatusInternalServerError)
+		if err := swapi.DefaultClient.Get("films/", &swapiMoviesResponse); err != nil {
+			log.Println(err.ActualError)
+			return nil, errors.New(err.Message, err.StatusCode)
 		}
+
 		if err := m.Cache.Set("movies", &swapiMoviesResponse); err != nil {
 			log.Printf("error setting movielist in cache: %v", err)
 		}

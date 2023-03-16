@@ -35,12 +35,11 @@ func (s *service) AddComment(comment *types.Comment, movieID int) (*types.Commen
 	cachedMovie, err := s.Cache.Get(fmt.Sprintf("movie-%v", movieID), &swapiMovie)
 	if err == redis.Nil && cachedMovie == nil {
 
-		err := swapi.DefaultClient.Get(fmt.Sprintf("films/%v/", movieID), &swapiMovie)
-		if err != nil {
-			log.Printf("error making swapi client call %#v", err)
-
-			return nil, errors.New("internal server error", http.StatusInternalServerError)
+		if err := swapi.DefaultClient.Get(fmt.Sprintf("films/%v/", movieID), &swapiMovie); err != nil {
+			log.Println(err.ActualError)
+			return nil, errors.New(err.Message, err.StatusCode)
 		}
+
 		if err := s.Cache.Set(fmt.Sprintf("movie-%v", movieID), &swapiMovie); err != nil {
 			log.Printf("error setting movie-%v in cache: %v", movieID, err)
 		}
@@ -68,11 +67,10 @@ func (s *service) GetComments(movieID int) ([]types.Comment, *errors.Error) {
 	// Cache  call based off the id
 	_, err := s.Cache.Get(fmt.Sprintf("movie-%v", movieID), &swapiMovie)
 	if err == redis.Nil {
-		err := swapi.DefaultClient.Get(fmt.Sprintf("films/%v/", movieID), &swapiMovie)
-		if err != nil {
-			log.Printf("error making swapi client call %#v", err)
+		if err := swapi.DefaultClient.Get(fmt.Sprintf("films/%v/", movieID), &swapiMovie); err != nil {
+			log.Println(err.ActualError)
+			return nil, errors.New(err.Message, err.StatusCode)
 
-			return nil, errors.New("internal server error", http.StatusInternalServerError)
 		}
 		if err := s.Cache.Set(fmt.Sprintf("movie-%v", movieID), &swapiMovie); err != nil {
 			log.Printf("error setting movie-%v in cache: %v", movieID, err)

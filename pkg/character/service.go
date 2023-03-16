@@ -10,7 +10,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"log"
 	"math"
-	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -36,11 +35,9 @@ func (s *service) List(movieID int, sortBy, filterByGender string) (*types.Chara
 
 	cachedMovie, err := s.Cache.Get(fmt.Sprintf("movie-%v", movieID), &swapiMovie)
 	if err == redis.Nil && cachedMovie == nil {
-		err := swapi.DefaultClient.Get(fmt.Sprintf("films/%v/", movieID), &swapiMovie)
-		if err != nil {
-			log.Printf("error making swapi client call %#v", err)
-
-			return nil, errors.New("internal server error", http.StatusInternalServerError)
+		if err := swapi.DefaultClient.Get(fmt.Sprintf("films/%v/", movieID), &swapiMovie); err != nil {
+			log.Println(err.ActualError)
+			return nil, errors.New(err.Message, err.StatusCode)
 		}
 
 		if err := s.Cache.Set(fmt.Sprintf("movie-%v", movieID), &swapiMovie); err != nil {
